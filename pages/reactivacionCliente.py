@@ -111,124 +111,111 @@ if archivo is not None:
         st.markdown("---")
 
         # =========================================
-        # GRÁFICO 1 — BARRAS POR SEGMENTO
+        # GRÁFICO 1 — MOTIVOS DE ENTRADA
         # =========================================
 
-        ORDEN_SEGMENTOS = [
-            "6 - 12 meses",
-            "12 - 18 meses",
-            "18 - 24 meses",
-            "24+ meses",
-        ]
-        COLORES_SEGMENTOS = {
-            "6 - 12 meses": "#22c55e",
-            "12 - 18 meses": "#f59e0b",
-            "18 - 24 meses": "#ef4444",
-            "24+ meses": "#8b5cf6",
-        }
-
-        seg_counts = resultado["Segmento Reactivación"].value_counts()
-        total = seg_counts.sum()
-
-        seg_df = pd.DataFrame(
-            {
-                "Segmento": ORDEN_SEGMENTOS,
-                "Cantidad": [seg_counts.get(s, 0) for s in ORDEN_SEGMENTOS],
-            }
+        motivos = (
+            resultado["Motivo de Entrada"]
+            .fillna("Sin dato")
+            .astype(str)
+            .str.strip()
+            .value_counts()
+            .head(10)
+            .reset_index()
         )
-        seg_df["Porcentaje"] = (seg_df["Cantidad"] / total * 100).round(1)
-        seg_df["Color"] = seg_df["Segmento"].map(COLORES_SEGMENTOS)
+
+        motivos.columns = ["Motivo", "Cantidad"]
 
         fig1 = go.Figure()
 
         fig1.add_trace(
-            go.Bar(
-                x=seg_df["Segmento"],
-                y=seg_df["Cantidad"],
+            go.Pie(
+                labels=motivos["Motivo"],
+                values=motivos["Cantidad"],
+                hole=0.45,
+                pull=[0.03] * len(motivos),
                 marker=dict(
-                    color=seg_df["Color"].tolist(),
-                    line=dict(color="rgba(0,0,0,0.15)", width=1),
+                    colors=[
+                        "#3b82f6",
+                        "#22c55e",
+                        "#f59e0b",
+                        "#ef4444",
+                        "#8b5cf6",
+                        "#06b6d4",
+                        "#ec4899",
+                        "#84cc16",
+                        "#f97316",
+                        "#14b8a6",
+                    ]
                 ),
-                text=[
-                    f"{p}%<br>({c})"
-                    for p, c in zip(seg_df["Porcentaje"], seg_df["Cantidad"])
-                ],
-                textposition="outside",
-                textfont=dict(size=13),
-                hovertemplate="<b>%{x}</b><br>%{y} vehículos<br>%{text}<extra></extra>",
             )
         )
 
         fig1.update_layout(
-            title=dict(text="Segmentos de Reactivación", font=dict(size=16), x=0),
-            xaxis=dict(title="", tickfont=dict(size=13)),
-            yaxis=dict(
-                title="Vehículos",
-                showgrid=True,
-                gridcolor="rgba(148,163,184,0.2)",
+            title=dict(
+                text="📋 Motivos de Entrada Más Frecuentes",
+                x=0,
+                font=dict(size=16),
             ),
-            margin=dict(t=55, b=30, l=10, r=10),
-            height=370,
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            showlegend=False,
+            height=380,
         )
 
         # =========================================
         # GRÁFICO 2 — GAMAS CON MAYOR INACTIVIDAD
         # =========================================
 
-        gamas = resultado["Gama"].value_counts().head(10).reset_index()
+        gamas = (
+            resultado["Gama"]
+            .fillna("Sin dato")
+            .astype(str)
+            .str.strip()
+            .value_counts()
+            .head(10)
+            .reset_index()
+        )
+
         gamas.columns = ["Gama", "Cantidad"]
-        gamas = gamas.sort_values("Cantidad", ascending=True)
-        gamas["Porcentaje"] = (gamas["Cantidad"] / total * 100).round(1)
+
+        gamas = gamas.sort_values("Cantidad", ascending=False)
 
         fig2 = go.Figure()
 
         fig2.add_trace(
-            go.Bar(
-                y=gamas["Gama"],
-                x=gamas["Cantidad"],
-                orientation="h",
-                marker=dict(
-                    color="#3b82f6",
-                    opacity=0.85,
-                    line=dict(color="rgba(0,0,0,0.1)", width=1),
-                ),
-                text=[
-                    f"{c}  ({p}%)"
-                    for c, p in zip(gamas["Cantidad"], gamas["Porcentaje"])
-                ],
-                textposition="outside",
-                textfont=dict(size=12),
-                hovertemplate="<b>%{y}</b><br>%{x} vehículos<br>%{text}<extra></extra>",
+            go.Scatter(
+                x=gamas["Gama"],
+                y=gamas["Cantidad"],
+                mode="lines+markers+text",
+                line=dict(width=4, color="#f97316"),
+                marker=dict(size=12, color="#f97316"),
+                text=gamas["Cantidad"],
+                textposition="top center",
             )
         )
 
         fig2.update_layout(
             title=dict(
-                text="Gamas con Mayor Inactividad (Top 10)", font=dict(size=16), x=0
+                text="🚗 Gamas con Mayor Inactividad",
+                x=0,
+                font=dict(size=16),
             ),
-            xaxis=dict(
-                title="Vehículos",
-                showgrid=True,
-                gridcolor="rgba(148,163,184,0.2)",
-            ),
-            yaxis=dict(title="", tickfont=dict(size=12)),
-            margin=dict(t=55, b=30, l=10, r=80),
-            height=max(300, len(gamas) * 42 + 80),
+            xaxis=dict(title="Gama", tickangle=-30),
+            yaxis=dict(title="Vehículos"),
+            height=380,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            showlegend=False,
         )
 
         # =========================================
         # MOSTRAR GRÁFICOS
         # =========================================
 
+        st.markdown("### 📊 Análisis Visual")
+
         gc1, gc2 = st.columns(2)
+
         with gc1:
             st.plotly_chart(fig1, use_container_width=True)
+
         with gc2:
             st.plotly_chart(fig2, use_container_width=True)
 
