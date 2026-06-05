@@ -35,6 +35,23 @@ st.divider()
 archivo = st.file_uploader("📂 Arrastra aquí el archivo CSV de Taller", type=["csv"])
 
 # =========================================
+# ESTADO DE CARGA
+# =========================================
+
+archivos_cargados = sum([archivo is not None])
+
+if archivos_cargados < 1:
+
+    st.warning(
+        f"⏳ Archivo cargado: {archivos_cargados}/1. "
+        "Carga el archivo de Taller para iniciar el proceso."
+    )
+
+else:
+
+    st.success("✅ Archivo de Taller cargado correctamente.")
+
+# =========================================
 # PROCESAMIENTO
 # =========================================
 
@@ -206,7 +223,3 @@ if archivo is not None:
     except Exception as e:
 
         st.error(f"Ocurrió un error al procesar el archivo:\n\n{e}")
-
-else:
-
-    st.info("👆 Carga un archivo CSV de Taller para comenzar.")

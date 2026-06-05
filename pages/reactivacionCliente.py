@@ -160,10 +160,6 @@ if archivo is not None:
             height=380,
         )
 
-        # =========================================
-        # GRÁFICO 2 — GAMAS CON MAYOR INACTIVIDAD
-        # =========================================
-
         gamas = (
             resultado["Gama"]
             .fillna("Sin dato")
@@ -176,33 +172,43 @@ if archivo is not None:
 
         gamas.columns = ["Gama", "Cantidad"]
 
-        gamas = gamas.sort_values("Cantidad", ascending=False)
+        gamas = gamas.sort_values("Cantidad", ascending=True)
+
+        # =========================================
+        # GRÁFICO 2 — GAMAS CON MAYOR INACTIVIDAD
+        # =========================================
 
         fig2 = go.Figure()
 
         fig2.add_trace(
-            go.Scatter(
-                x=gamas["Gama"],
-                y=gamas["Cantidad"],
-                mode="lines+markers+text",
-                line=dict(width=4, color="#f97316"),
-                marker=dict(size=12, color="#f97316"),
+            go.Bar(
+                y=gamas["Gama"],
+                x=gamas["Cantidad"],
+                orientation="h",
                 text=gamas["Cantidad"],
-                textposition="top center",
+                textposition="outside",
+                marker=dict(
+                    color=[
+                        "#22c55e",
+                        "#06b6d4",
+                        "#f59e0b",
+                        "#ef4444",
+                        "#8b5cf6",
+                        "#14b8a6",
+                        "#ec4899",
+                        "#84cc16",
+                        "#f97316",
+                        "#3b82f6",
+                    ][: len(gamas)],
+                ),
             )
         )
 
         fig2.update_layout(
-            title=dict(
-                text="🚗 Gamas con Mayor Inactividad",
-                x=0,
-                font=dict(size=16),
-            ),
-            xaxis=dict(title="Gama", tickangle=-30),
-            yaxis=dict(title="Vehículos"),
-            height=380,
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
+            title="🚗 Top Gamas con Mayor Inactividad",
+            yaxis=dict(categoryorder="total ascending"),
+            height=420,
+            showlegend=False,
         )
 
         # =========================================

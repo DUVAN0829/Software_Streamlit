@@ -453,26 +453,22 @@ if archivo_vehiculos is not None and archivo_taller is not None:
     st.markdown("---")
 
     # =========================================
-    # GRÁFICOS — DEBAJO DE LA TABLA
+    # GRÁFICOS
     # =========================================
-    st.markdown("### 📊 Análisis visual")
+    st.markdown("### 📊 Análisis Visual")
+
+    st.plotly_chart(grafico_velocidad_gamas(resultado), use_container_width=True)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.plotly_chart(grafico_donut_estados(resultado), use_container_width=True)
+
+    with col2:
+        st.plotly_chart(grafico_estado_por_gama(resultado), use_container_width=True)
 
     st.markdown("---")
 
-    g_donut = grafico_donut_estados(resultado)
-    g_velocidad = grafico_velocidad_gamas(resultado)
-
-    gcol1, gcol2 = st.columns([1, 2])
-    with gcol1:
-        if g_donut:
-            st.plotly_chart(g_donut, use_container_width=True)
-    with gcol2:
-        if g_velocidad:
-            st.plotly_chart(g_velocidad, use_container_width=True)
-        elif "Gama" not in resultado.columns:
-            st.info("La columna **Gama** no está disponible en los datos de vehículos.")
-
-    st.markdown("---")
     # =========================================
     # FILTROS
     # =========================================
