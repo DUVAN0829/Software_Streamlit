@@ -423,6 +423,27 @@ with col_b:
     )
 
 # =========================================
+# ESTADO DE CARGA
+# =========================================
+
+archivos_cargados = sum([archivo_vehiculos is not None, archivo_taller is not None])
+
+if archivos_cargados < 2:
+
+    st.warning(
+        f"⏳ Archivos cargados: {archivos_cargados}/2. "
+        "Carga todos los archivos para iniciar el proceso."
+    )
+
+# =========================================
+# PROCESAR
+# =========================================
+
+if archivo_vehiculos is not None and archivo_taller is not None:
+
+    st.success("✅ Archivos cargados correctamente.")
+
+# =========================================
 # PROCESAMIENTO AUTOMÁTICO
 # =========================================
 
@@ -572,12 +593,3 @@ if archivo_vehiculos is not None and archivo_taller is not None:
     st.download_button(
         "⬇️ Descargar CSV Resultado", csv_out, "recordatorio_vh.csv", "text/csv"
     )
-
-elif archivo_vehiculos is not None and archivo_taller is None:
-    st.info("📂 Archivo de vehículos cargado. Ahora arrastra el archivo del taller.")
-
-elif archivo_vehiculos is None and archivo_taller is not None:
-    st.info("📂 Archivo de taller cargado. Ahora arrastra el archivo de vehículos.")
-
-else:
-    st.info("👆 Carga los dos archivos para generar el cruce automáticamente.")

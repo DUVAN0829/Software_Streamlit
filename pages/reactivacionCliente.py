@@ -27,6 +27,27 @@ st.markdown("---")
 archivo = st.file_uploader("📂 Carga el archivo de Taller", type=["csv"])
 
 # =========================================
+# ESTADO DE CARGA
+# =========================================
+
+archivos_cargados = sum([archivo is not None])
+
+if archivos_cargados < 1:
+
+    st.warning(
+        f"⏳ Archivos cargados: {archivos_cargados}/1. "
+        "Carga todos los archivos para iniciar el proceso."
+    )
+
+# =========================================
+# PROCESAR
+# =========================================
+
+if archivo is not None:
+
+    st.success("✅ Archivos cargados correctamente.")
+
+# =========================================
 # FUNCIONES
 # =========================================
 
@@ -245,6 +266,3 @@ if archivo is not None:
 
     except Exception as e:
         st.exception(e)
-
-else:
-    st.info("👆 Carga el archivo histórico de Taller para comenzar.")
