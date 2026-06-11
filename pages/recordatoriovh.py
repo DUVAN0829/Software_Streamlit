@@ -8,9 +8,6 @@ st.set_page_config(page_title="Recordatorio VH", page_icon="🔔", layout="wide"
 
 st.title("🔔 Recordatorio VH")
 st.markdown("Carga los dos archivos y el cruce se genera automáticamente.")
-st.markdown("---")
-
-st.markdown("---")
 
 with st.expander("ℹ️ ¿Cómo funciona este módulo?", expanded=False):
     st.markdown("""

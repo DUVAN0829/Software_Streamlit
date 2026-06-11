@@ -45,7 +45,7 @@ with col2:
     )
 
 with col3:
-    archivo_3 = st.file_uploader("🚗 Clientes / VIN", type=["csv"], key="archivo3")
+    archivo_3 = st.file_uploader("🚗 Reporte Citas", type=["csv"], key="archivo3")
 
 # =========================================
 # ESTADO DE CARGA
