@@ -138,10 +138,25 @@ if archivo_1 is not None and archivo_2 is not None and archivo_3 is not None:
 
         resultado = pd.merge(
             resultado,
-            df3[["VIN", "Nombre Cliente", "Telf. Móvil"]],
+            df3[["VIN", "Nombre Cliente", "Telf. Móvil", "Resto Telfs"]],
             on="VIN",
             how="left",
         )
+
+        # RELLENAR TELÉFONO
+        resultado["Telf. Móvil"] = resultado["Telf. Móvil"].fillna("").str.strip()
+        resultado["Resto Telfs"] = resultado["Resto Telfs"].fillna("").str.strip()
+
+        resultado["Telf. Móvil"] = resultado.apply(
+            lambda row: (
+                row["Resto Telfs"] if row["Telf. Móvil"] == "" else row["Telf. Móvil"]
+            ),
+            axis=1,
+        )
+
+        resultado = resultado.drop(
+            columns=["Resto Telfs"]
+        )  # opcional: ocultar del resultado final
 
         # =========================================
         # FECHA

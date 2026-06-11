@@ -15,24 +15,36 @@ with st.expander("ℹ️ ¿Cómo funciona este módulo?", expanded=False):
     st.markdown("""
 1. 📂 Carga el archivo exportado desde Taller.
 
-2. 🧹 El sistema limpiará automáticamente la información.
+2. 📅 Carga el archivo de Citas (opcional) para cruzar teléfonos por VIN.
 
-3. 🔄 Se eliminarán las OT duplicadas conservando la más reciente.
+3. 🧹 El sistema limpiará automáticamente la información.
 
-4. 📋 Se extraerán únicamente las columnas necesarias para análisis y campañas.
+4. 🔄 Se eliminarán las OT duplicadas conservando la más reciente.
 
-5. 📊 Se generarán indicadores y gráficos automáticamente.
+5. 📋 Se extraerán únicamente las columnas necesarias para análisis y campañas.
 
-6. 📥 Descarga el archivo consolidado listo para usar.
+6. 📞 Si se cargó el archivo de Citas, se agregará la columna **Numero Telefono** cruzando por VIN.
+
+7. 📊 Se generarán indicadores y gráficos automáticamente.
+
+8. 📥 Descarga el archivo consolidado listo para usar.
 """)
 
 st.divider()
 
 # =========================================
-# CARGA DE ARCHIVO
+# CARGA DE ARCHIVOS
 # =========================================
 
-archivo = st.file_uploader("📂 Arrastra aquí el archivo CSV de Taller", type=["csv"])
+col_up1, col_up2 = st.columns(2)
+
+with col_up1:
+    archivo = st.file_uploader("📂 Archivo CSV de Taller", type=["csv"])
+
+with col_up2:
+    archivo_citas = st.file_uploader(
+        "📅 Archivo CSV de Citas (opcional — para cruzar teléfonos)", type=["csv"]
+    )
 
 # =========================================
 # ESTADO DE CARGA
@@ -49,7 +61,10 @@ if archivos_cargados < 1:
 
 else:
 
-    st.success("✅ Archivo de Taller cargado correctamente.")
+    msg = "✅ Archivo de Taller cargado correctamente."
+    if archivo_citas is not None:
+        msg += " Archivo de Citas cargado — se cruzarán los teléfonos por VIN."
+    st.success(msg)
 
 # =========================================
 # PROCESAMIENTO
@@ -60,7 +75,7 @@ if archivo is not None:
     try:
 
         # =========================================
-        # LEER ARCHIVO
+        # LEER ARCHIVO TALLER
         # =========================================
 
         df = pd.read_csv(archivo, sep=";", skiprows=1, dtype=str, engine="python")
@@ -68,7 +83,7 @@ if archivo is not None:
         df.columns = df.columns.str.strip()
 
         # =========================================
-        # VALIDAR COLUMNAS
+        # VALIDAR COLUMNAS TALLER
         # =========================================
 
         columnas_necesarias = [
@@ -84,7 +99,7 @@ if archivo is not None:
         faltantes = [c for c in columnas_necesarias if c not in df.columns]
 
         if faltantes:
-            st.error(f"Faltan columnas en el archivo: {', '.join(faltantes)}")
+            st.error(f"Faltan columnas en el archivo de Taller: {', '.join(faltantes)}")
             st.stop()
 
         # =========================================
@@ -135,6 +150,73 @@ if archivo is not None:
         df["F. Fra."] = df["F. Fra."].dt.strftime("%d/%m/%Y")
 
         # =========================================
+        # CRUCE CON ARCHIVO CITAS (VIN → Celular)
+        # =========================================
+
+        cruce_info = None  # Para mostrar métricas del cruce más adelante
+
+        if archivo_citas is not None:
+
+            try:
+
+                df_citas = pd.read_csv(
+                    archivo_citas, sep=";", dtype=str, engine="python"
+                )
+
+                df_citas.columns = df_citas.columns.str.strip()
+
+                # Validar que existan las columnas necesarias en Citas
+                cols_citas_necesarias = ["VIN", "Celular"]
+                faltantes_citas = [
+                    c for c in cols_citas_necesarias if c not in df_citas.columns
+                ]
+
+                if faltantes_citas:
+                    st.warning(
+                        f"⚠️ El archivo de Citas no tiene las columnas requeridas: "
+                        f"{', '.join(faltantes_citas)}. No se realizará el cruce."
+                    )
+
+                else:
+
+                    # Limpiar VIN en ambos DataFrames para evitar espacios
+                    df["VIN"] = df["VIN"].astype(str).str.strip()
+                    df_citas["VIN"] = df_citas["VIN"].astype(str).str.strip()
+                    df_citas["Celular"] = df_citas["Celular"].astype(str).str.strip()
+
+                    # Conservar solo el primer registro por VIN en Citas
+                    # (en caso de que un mismo VIN aparezca varias veces)
+                    df_citas_unique = df_citas[["VIN", "Celular"]].drop_duplicates(
+                        subset="VIN", keep="first"
+                    )
+
+                    # Cruce: left join por VIN
+                    total_antes = len(df)
+                    df = df.merge(df_citas_unique, on="VIN", how="left")
+
+                    # Renombrar la columna Celular → Numero Telefono
+                    df = df.rename(columns={"Celular": "Numero Telefono"})
+
+                    # Reemplazar "nan" textual por vacío
+                    df["Numero Telefono"] = df["Numero Telefono"].replace("nan", "")
+
+                    # Calcular métricas del cruce
+                    con_telefono = df["Numero Telefono"].notna() & (
+                        df["Numero Telefono"] != ""
+                    )
+                    cruce_info = {
+                        "con_telefono": con_telefono.sum(),
+                        "sin_telefono": (~con_telefono).sum(),
+                        "total": total_antes,
+                    }
+
+            except Exception as e_citas:
+                st.warning(
+                    f"⚠️ No se pudo procesar el archivo de Citas: {e_citas}. "
+                    "El consolidado se generará sin número de teléfono."
+                )
+
+        # =========================================
         # KPIs
         # =========================================
 
@@ -152,6 +234,25 @@ if archivo is not None:
 
         with col3:
             st.metric("👤 Clientes Únicos", df["Cliente Fra."].nunique())
+
+        # KPIs adicionales del cruce de teléfonos
+        if cruce_info:
+            st.divider()
+            st.subheader("📞 Resultado del Cruce de Teléfonos")
+
+            c1, c2, c3 = st.columns(3)
+
+            with c1:
+                st.metric("✅ Con Número Telefono", cruce_info["con_telefono"])
+            with c2:
+                st.metric("❌ Sin Número Telefono", cruce_info["sin_telefono"])
+            with c3:
+                pct = (
+                    round(cruce_info["con_telefono"] / cruce_info["total"] * 100, 1)
+                    if cruce_info["total"] > 0
+                    else 0
+                )
+                st.metric("📊 Cobertura", f"{pct}%")
 
         st.divider()
 

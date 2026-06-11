@@ -10,6 +10,22 @@ st.title("🔔 Recordatorio VH")
 st.markdown("Carga los dos archivos y el cruce se genera automáticamente.")
 st.markdown("---")
 
+st.markdown("---")
+
+with st.expander("ℹ️ ¿Cómo funciona este módulo?", expanded=False):
+    st.markdown("""
+1. 📁 Carga el archivo de **Vehículos** con datos de clientes y fechas de entrega.
+2. 🔧 Carga el archivo de **Taller** con el historial de visitas y kilómetros.
+3. 🔄 El sistema eliminará OT duplicadas conservando la más reciente.
+4. 🚗 Se identificará la última visita registrada y el promedio de km/mes de cada vehículo.
+5. 📅 Se estimará el mes en que cada vehículo alcanzará los 10.000 km.
+6. 🏷️ Cada vehículo recibirá un estado: **Alcanzado**, **Activo** o **Pendiente**.
+7. 📊 Se generarán indicadores y gráficos automáticamente.
+8. 📥 Descarga la base lista para campañas de recordatorio.
+""")
+
+st.markdown("---")
+
 # =========================================
 # CONSTANTE
 # =========================================
